@@ -5,7 +5,7 @@ import { Editor, Transforms, createEditor } from "slate"
 import { withHistory } from "slate-history"
 
 import { Button, Icon, Toolbar } from "./SlateComponents"
-import { serialize } from "./slate-utils"
+import { serialize, to_markdown, html_to_slate } from "./slate-utils"
 
 const HOTKEYS = {
   "mod+b": "bold",
@@ -16,17 +16,38 @@ const HOTKEYS = {
 
 const LIST_TYPES = ["numbered-list", "bulleted-list"]
 
-const CoolEditor = ({ raw }) => {
-  const initialValue = [
+const CoolEditor = ({ raw, onSave }) => {
+  const _initialValue = [
     {
-      type: "paragraph",
-      children: [{ text: raw }],
+      type: "section",
+      children: [
+        {
+          type: "paragraph",
+          children: [{ text: "" }],
+        },
+      ],
     },
   ]
+  const initialValue = raw ? html_to_slate(raw) : _initialValue
+  console.log("#initial ", initialValue)
   const [value, setValue] = useState(initialValue)
   const renderElement = useCallback(props => <Element {...props} />, [])
   const renderLeaf = useCallback(props => <Leaf {...props} />, [])
   const editor = useMemo(() => withHistory(withReact(createEditor())), [])
+
+  const onPresave = () => {
+    const html_body = serialize({ children: value })
+    const title = value[0].children[0].text
+
+    console.log("#pre save ", value)
+    //@ts-ignore
+    const content = to_markdown({
+      title: title,
+      date: new Date().toISOString(),
+      html_body: html_body,
+    })
+    onSave({ title, content })
+  }
 
   return (
     <Slate editor={editor} value={value} onChange={value => setValue(value)}>
@@ -35,14 +56,12 @@ const CoolEditor = ({ raw }) => {
         <MarkButton format="italic" icon="format_italic" />
         <MarkButton format="underline" icon="format_underlined" />
         <MarkButton format="code" icon="code" />
-        <BlockButton format="heading-one" icon="looks_one" />
+        <BlockButton format="heading-one" icon="looks_one" editor={editor} />
         <BlockButton format="heading-two" icon="looks_two" />
         <BlockButton format="block-quote" icon="format_quote" />
         <BlockButton format="numbered-list" icon="format_list_numbered" />
         <BlockButton format="bulleted-list" icon="format_list_bulleted" />
-        <button onClick={() => console.log(serialize({ children: value }))}>
-          Save
-        </button>
+        <button onClick={onPresave}>Save</button>
       </Toolbar>
       <Editable
         renderElement={renderElement}
@@ -68,23 +87,30 @@ const toggleBlock = (editor, format) => {
   const isActive = isBlockActive(editor, format)
   const isList = LIST_TYPES.includes(format)
 
-  Transforms.unwrapNodes(editor, {
-    match: n => LIST_TYPES.includes(n.type),
-    split: true,
-  })
+  console.log("blog toggle ", format, isActive, editor)
+
+  // Transforms.unwrapNodes(editor, {
+  //   match: n => LIST_TYPES.includes(n.type),
+  //   split: true,
+  // })
+
+  // Transforms.setNodes(editor, {
+  //   type: isActive ? "paragraph" : isList ? "list-item" : format,
+  // })
 
   Transforms.setNodes(editor, {
-    type: isActive ? "paragraph" : isList ? "list-item" : format,
+    type: isActive ? "paragraph" : "heading-one",
   })
-
-  if (!isActive && isList) {
-    const block = { type: format, children: [] }
-    Transforms.wrapNodes(editor, block)
-  }
+  // if (!isActive && isList) {
+  //   const block = { type: format, children: [] }
+  //   Transforms.wrapNodes(editor, block)
+  // }
 }
 
 const toggleMark = (editor, format) => {
   const isActive = isMarkActive(editor, format)
+
+  console.log("toggle ", isActive, format, editor)
 
   if (isActive) {
     Editor.removeMark(editor, format)
@@ -94,11 +120,21 @@ const toggleMark = (editor, format) => {
 }
 
 const isBlockActive = (editor, format) => {
-  const [match] = Editor.nodes(editor, {
-    match: n => n.type === format,
+  console.log("isBlockActi ", format)
+  const nodes = Array.from(editor.children)[0].children
+  const [foo] = nodes.filter(n => n.type === format);
+  console.log("#All ", nodes, !!foo)
+
+  const [match] = Editor.nodes(nodes, {
+    match: n => {
+      console.log("  -- ", n)
+      return n.type === format
+    },
   })
 
-  return !!match
+  console.log("#", [foo])
+
+  return !!foo
 }
 
 const isMarkActive = (editor, format) => {
@@ -120,6 +156,8 @@ const Element = ({ attributes, children, element }) => {
       return <li {...attributes}>{children}</li>
     case "numbered-list":
       return <ol {...attributes}>{children}</ol>
+    case "section":
+      return <section {...attributes}>{children}</section>
     default:
       return <p {...attributes}>{children}</p>
   }
@@ -145,18 +183,19 @@ const Leaf = ({ attributes, children, leaf }) => {
   return <span {...attributes}>{children}</span>
 }
 
-const BlockButton = ({ format, icon }) => {
-  const editor = useSlate()
+const BlockButton = ({ format, icon, editor }) => {
+ // const editor = useSlate()
+
   return (
-    <Button
-      active={isBlockActive(editor, format)}
+    <button
+      //active={isBlockActive(editor, format)}
       onMouseDown={event => {
         event.preventDefault()
         toggleBlock(editor, format)
       }}
     >
-      <Icon>{icon}</Icon>
-    </Button>
+      {icon}
+    </button>
   )
 }
 

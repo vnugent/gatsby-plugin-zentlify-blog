@@ -4,7 +4,7 @@ import { Slate, Editable, withReact } from "slate-react";
 import { MDXRenderer } from "gatsby-plugin-mdx";
 import { MDXProvider } from "@mdx-js/react";
 
-const Editor = ({ raw }) => {
+const Editor = ({ raw, onSave }) => {
   const editor = useMemo(() => withReact(createEditor()), []);
   // Add the initial value when setting up our state.
   const [value, setValue] = useState([
