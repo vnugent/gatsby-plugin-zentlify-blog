@@ -1,16 +1,15 @@
 import React, { useCallback, useMemo, useState } from "react"
 import isHotkey from "is-hotkey"
-import { Editable, withReact, useSlate, Slate } from "slate-react"
+import { Editable, withReact, useSlate, Slate, useEditor } from "slate-react"
 import { Editor, Transforms, createEditor } from "slate"
 import { withHistory } from "slate-history"
 
 import { Button, Icon, Toolbar } from "./SlateComponents"
-import { serialize, to_markdown, html_to_slate } from "./slate-utils"
+import { serialize, to_markdown, html_to_slate, gen_slug_from } from "./slate-utils"
 
 const HOTKEYS = {
   "mod+b": "bold",
   "mod+i": "italic",
-  "mod+u": "underline",
   "mod+`": "code",
 }
 
@@ -19,17 +18,12 @@ const LIST_TYPES = ["numbered-list", "bulleted-list"]
 const CoolEditor = ({ raw, onSave }) => {
   const _initialValue = [
     {
-      type: "section",
-      children: [
-        {
-          type: "paragraph",
-          children: [{ text: "" }],
-        },
-      ],
+      type: "paragraph",
+      children: [{ text: "" }],
     },
   ]
   const initialValue = raw ? html_to_slate(raw) : _initialValue
-  console.log("#initial ", initialValue)
+  // console.log("#initial ", initialValue)
   const [value, setValue] = useState(initialValue)
   const renderElement = useCallback(props => <Element {...props} />, [])
   const renderLeaf = useCallback(props => <Leaf {...props} />, [])
@@ -37,28 +31,29 @@ const CoolEditor = ({ raw, onSave }) => {
 
   const onPresave = () => {
     const html_body = serialize({ children: value })
-    const title = value[0].children[0].text
-
-    console.log("#pre save ", value)
-    //@ts-ignore
-    const content = to_markdown({
-      title: title,
+    const title = Editor.first(editor,[])[0].text;
+    const slug = gen_slug_from(title);
+    const frontmatter = {
+      title,
+      slug,
       date: new Date().toISOString(),
-      html_body: html_body,
+    }
+    const content = to_markdown({
+      frontmatter,
+      html_body,
     })
-    onSave({ title, content })
+    onSave({frontmatter, content} )
   }
 
   return (
     <Slate editor={editor} value={value} onChange={value => setValue(value)}>
       <Toolbar>
-        <MarkButton format="bold" icon="format_bold" />
+        <MarkButton format="strong" icon="format_bold" />
         <MarkButton format="italic" icon="format_italic" />
-        <MarkButton format="underline" icon="format_underlined" />
-        <MarkButton format="code" icon="code" />
-        <BlockButton format="heading-one" icon="looks_one" editor={editor} />
-        <BlockButton format="heading-two" icon="looks_two" />
-        <BlockButton format="block-quote" icon="format_quote" />
+        {/* <MarkButton format="code" icon="code" /> */}
+        <BlockButton format="title" icon="title" />
+        <BlockButton format="subtitle" icon="subtitle" />
+        <BlockButton format="block-quote" icon="Quote" />
         <BlockButton format="numbered-list" icon="format_list_numbered" />
         <BlockButton format="bulleted-list" icon="format_list_bulleted" />
         <button onClick={onPresave}>Save</button>
@@ -89,22 +84,22 @@ const toggleBlock = (editor, format) => {
 
   console.log("blog toggle ", format, isActive, editor)
 
-  // Transforms.unwrapNodes(editor, {
-  //   match: n => LIST_TYPES.includes(n.type),
-  //   split: true,
-  // })
-
-  // Transforms.setNodes(editor, {
-  //   type: isActive ? "paragraph" : isList ? "list-item" : format,
-  // })
+  Transforms.unwrapNodes(editor, {
+    match: n => LIST_TYPES.includes(n.type),
+    split: true,
+  })
 
   Transforms.setNodes(editor, {
-    type: isActive ? "paragraph" : "heading-one",
+    type: isActive ? "paragraph" : isList ? "list-item" : format,
   })
-  // if (!isActive && isList) {
-  //   const block = { type: format, children: [] }
-  //   Transforms.wrapNodes(editor, block)
-  // }
+
+  // Transforms.setNodes(editor, {
+  //   type: isActive ? "paragraph" : format,
+  // })
+  if (!isActive && isList) {
+    const block = { type: format, children: [] }
+    Transforms.wrapNodes(editor, block)
+  }
 }
 
 const toggleMark = (editor, format) => {
@@ -120,19 +115,17 @@ const toggleMark = (editor, format) => {
 }
 
 const isBlockActive = (editor, format) => {
-  console.log("isBlockActi ", format)
-  const nodes = Array.from(editor.children)[0].children
-  const [foo] = nodes.filter(n => n.type === format);
-  console.log("#All ", nodes, !!foo)
+  const nodes = Array.from(editor.children)
+  const [foo] = nodes.filter(n => n.type === format)
 
-  const [match] = Editor.nodes(nodes, {
+  const [match] = Editor.nodes(editor.children, {
     match: n => {
-      console.log("  -- ", n)
+      console.log(" ---", n)
       return n.type === format
     },
   })
 
-  console.log("#", [foo])
+  console.log("isBlockActive? ", [match], editor)
 
   return !!foo
 }
@@ -148,10 +141,10 @@ const Element = ({ attributes, children, element }) => {
       return <blockquote {...attributes}>{children}</blockquote>
     case "bulleted-list":
       return <ul {...attributes}>{children}</ul>
-    case "heading-one":
+    case "title":
       return <h1 {...attributes}>{children}</h1>
-    case "heading-two":
-      return <h2 {...attributes}>{children}</h2>
+    case "subtitle":
+      return <h4 {...attributes}>{children}</h4>
     case "list-item":
       return <li {...attributes}>{children}</li>
     case "numbered-list":
@@ -164,7 +157,7 @@ const Element = ({ attributes, children, element }) => {
 }
 
 const Leaf = ({ attributes, children, leaf }) => {
-  if (leaf.bold) {
+  if (leaf.strong) {
     children = <strong>{children}</strong>
   }
 
@@ -183,8 +176,8 @@ const Leaf = ({ attributes, children, leaf }) => {
   return <span {...attributes}>{children}</span>
 }
 
-const BlockButton = ({ format, icon, editor }) => {
- // const editor = useSlate()
+const BlockButton = ({ format, icon }) => {
+  const editor = useEditor()
 
   return (
     <button

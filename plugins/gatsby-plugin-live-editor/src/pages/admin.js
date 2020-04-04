@@ -12,7 +12,7 @@ export default ({ data }) => {
         <Editor raw={content} onFinish={() => setEditableContent(undefined)} />
       )}
       <header >Admin</header>
-      <Link to="/Editor">Write new post</Link>
+      <Link to="/Editor"><strong>Write new post</strong></Link>
       <ul>
         {data &&
           data.allMarkdownRemark.edges.map(post => (

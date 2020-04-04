@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from "react"
 import { Link } from "gatsby"
 
+import { navigate } from "@reach/router"
+
 import { GitClient } from "@tinacms/git-client"
 import CoolEditor from "../components/CoolEditor"
 import slugify from "slugify"
@@ -11,14 +13,14 @@ export default ({ raw, onFinish, location, ...rest }) => {
   const slug = get_slug(location)
   slug && console.log("Trying to load ", slug)
 
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(false)
   const [data, setData] = useState(undefined)
   const [error, setError] = useState(false)
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        setLoading(true);
+        setLoading(true)
         const result = await fetch(`/page-data/${slug}/page-data.json`)
         console.log("#fetching data", result)
         if (result.ok) {
@@ -32,23 +34,41 @@ export default ({ raw, onFinish, location, ...rest }) => {
         setError(true)
         console.log("#Error loading post ", error)
       } finally {
-        setLoading(false);
+        setLoading(false)
       }
     }
     slug && fetchData()
   }, [])
 
-  const onSave = ({ title, content }) => {
-    const slug = title
-      ? slugify(title)
-      : `${catNames.random()}-${catNames.random()}-${Math.random()
-          .toString(36)
-          .substr(2, 5)}`
-    console.log("# on Save  ", content);
-    // gitClient.writeToDisk({
-    //   fileRelativePath: `${slug}/index.md`,
-    //   content: content,
-    // })
+  const onSave = async ({ frontmatter, content }) => {
+    // const slug = title
+    //   ? slugify(title)
+    //   : `${catNames.random()}-${catNames.random()}-${Math.random()
+    //       .toString(36)
+    //       .substr(2, 5)}`
+
+    const slug_has_changed = (slug !== frontmatter.slug) || false
+
+    console.log("# on Save  ", slug, frontmatter, content)
+    if (slug && slug_has_changed) {
+      console.log("existing slug renamed - delete old one")
+      await gitClient.deleteFromDisk({
+        relPath: `${slug}/index.md`,
+        //fileRelativePath: `${frontmatter.slug}/index.md`,
+        // content: content,
+      })
+    }
+
+    console.log("writing file to disk")
+    try {
+      await gitClient.writeToDisk({
+        fileRelativePath: `${frontmatter.slug}/index.md`,
+        content: content,
+      })
+      if (slug_has_changed) {
+        navigate(`./Editor?p=${frontmatter.slug}`)
+      }
+    } catch (error) {}
   }
 
   const gitClient = new GitClient("http://localhost:8000/___tina")
@@ -59,7 +79,7 @@ export default ({ raw, onFinish, location, ...rest }) => {
   // })
 
   return (
-    <div style={{ width: "100%", vh: "100vh" }}>
+    <div style={{ maxWidth: "750px", vh: "100vh", margin: "0 auto" }}>
       <Link to="/admin">Back to dashboard</Link>
       {loading && <div>loading ...</div>}
       {error && <div>error occurred while loading post</div>}
