@@ -6,6 +6,9 @@ import slugify from "slugify"
 export const serialize = node => {
   if (Text.isText(node)) {
     console.log(node.text, node)
+    if (node.text.trim() === "") {
+      return "&nbsp;"
+    }
     var html = escapeHtml(node.text)
     html = node.strong ? `<strong>${html}</strong>` : html
     html = node.italic ? `<i>${html}</i>` : html
@@ -24,10 +27,10 @@ export const serialize = node => {
       return `<h1>${children}</h1>`
     case "subtitle":
       return `<p class="subtitle">${children}</p>`
-    case "b":
-      return `<strong>${children}</strong>`
-    case "i":
-      return `<i>${children}</strong>`
+    // case "b":
+    //   return `<strong>${children}</strong>`
+    // case "i":
+    //   return `<i>${children}</i>`
     case "link":
       return `<a href="${escapeHtml(node.url)}">${children}</a>`
     default:
@@ -43,14 +46,13 @@ export const html_to_slate = html_str => {
 
 export const deserialize = el => {
   if (el.nodeType === 3) {
-    console.log(el)
     return el.textContent
   } else if (el.nodeType !== 1) {
     return null
   }
 
   const children = Array.from(el.childNodes).map(deserialize)
-
+  console.log(" - children ", children)
   switch (el.nodeName.toUpperCase()) {
     case "BODY":
       return jsx("fragment", {}, children)
@@ -59,7 +61,11 @@ export const deserialize = el => {
     case "BLOCKQUOTE":
       return jsx("element", { type: "quote" }, children)
     case "P":
-      return jsx("element", { type: "paragraph" }, children)
+      return jsx(
+        "element",
+        { type: "paragraph" },
+        children.length === 0 ? jsx("text", {}, "") : children // account for empty <p></p>
+      )
     case "B":
       return jsx("text", { strong: true }, children)
     case "STRONG":
@@ -76,6 +82,7 @@ export const deserialize = el => {
         children
       )
     default:
+      console.log("Default ", el)
       return el.textContent
   }
 }

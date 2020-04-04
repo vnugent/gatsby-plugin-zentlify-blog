@@ -23,7 +23,7 @@ const CoolEditor = ({ raw, onSave }) => {
     },
   ]
   const initialValue = raw ? html_to_slate(raw) : _initialValue
-  // console.log("#initial ", initialValue)
+  console.log("#initial ", initialValue)
   const [value, setValue] = useState(initialValue)
   const renderElement = useCallback(props => <Element {...props} />, [])
   const renderLeaf = useCallback(props => <Leaf {...props} />, [])
@@ -56,7 +56,7 @@ const CoolEditor = ({ raw, onSave }) => {
         <BlockButton format="block-quote" icon="Quote" />
         <BlockButton format="numbered-list" icon="format_list_numbered" />
         <BlockButton format="bulleted-list" icon="format_list_bulleted" />
-        <button onClick={onPresave}>Save</button>
+        <button onClick={onPresave}>Save draft</button>
       </Toolbar>
       <Editable
         renderElement={renderElement}
