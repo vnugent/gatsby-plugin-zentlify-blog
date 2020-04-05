@@ -1,9 +1,21 @@
 import escapeHtml from "escape-html"
 import { jsx } from "slate-hyperscript"
-import { Node, Text } from "slate"
+import { Editor, Node, Text, Transforms } from "slate"
 import slugify from "slugify"
+import catNames from "cat-names"
 
+/**
+ * Convert Slate DOM into markdown with html body
+ * @param {node} node - Slate's root document
+ */
 export const serialize = node => {
+  // const firstNode = node.children[0]
+  const title = Editor.first(node, [])[0].text
+
+  return { title, body: _serialize_body(node) }
+}
+
+export const _serialize_body = node => {
   if (Text.isText(node)) {
     if (node.text.trim() === "") {
       return "&nbsp;"
@@ -15,7 +27,7 @@ export const serialize = node => {
     return html
   }
 
-  const children = node.children.map(n => serialize(n)).join("")
+  const children = node.children.map(n => _serialize_body(n)).join("")
 
   switch (node.type) {
     case "quote":
@@ -23,7 +35,8 @@ export const serialize = node => {
     case "paragraph":
       return `<p>${children}</p>`
     case "title":
-      return `<h1>${children}</h1>`
+      return "\n"
+    // return `<h1>${children}</h1>`
     case "subtitle":
       return `<p class="subtitle">${children}</p>`
     // case "b":
@@ -37,10 +50,19 @@ export const serialize = node => {
   }
 }
 
-export const html_to_slate = html_str => {
-  const el = new DOMParser().parseFromString(html_str, "text/html")
+/**
+ * Convert markdown into Slate DOM
+ * @param {frontmatter} frontmatter post's frontmatter
+ * @param {body} markdown post's body
+ */
+export const html_to_slate = ({ frontmatter, body }) => {
+  const el = new DOMParser().parseFromString(body, "text/html")
   const tree = deserialize(el.body)
-  return tree
+  const titleNode = {
+    type: "title",
+    children: [{ text: frontmatter.title || "Untitled" }],
+  }
+  return [titleNode].concat(tree)
 }
 
 export const deserialize = el => {
@@ -89,17 +111,73 @@ export const deserialize = el => {
  * @param {frontmatter}
  * @param {html_body }
  */
-export const to_markdown = ({ frontmatter, html_body }) => {
+export const to_markdown = ({ frontmatter, body }) => {
   const { title, slug, date } = frontmatter
-  return `---\ntitle: ${title}\nslug: ${slug}\ndate: ${date}\n---\n${html_body}`
+  return `---\ntitle: ${title}\nslug: ${slug}\ndate: ${date}\n---\n${body}`
 }
 
+export const new_draft = () => {
+  return {
+    frontmatter: {
+      title: "Untitled",
+      slug: random_slug(),
+      date: new Date().toISOString(),
+    },
+    html_body: "\n",
+  }
+}
 /**
  * Generate post slug from string (typically post's title)
  * @param  str
  * @param limit number of words (default = 12)
  */
 export const gen_slug_from = (str, limit = 12) => {
+  if (!str) {
+    return random_slug()
+  }
   const tokens = str.split(" ", limit ? limit : 12)
   return slugify(tokens.join(" "), { lower: true, strict: true })
+}
+
+export const random_slug = () => {
+  return `new-${catNames.random()}-${catNames.random()}-${Math.random()
+    .toString(36)
+    .substr(2, 5)}`
+}
+/**
+ * Slate auto-normalize document to enforce structure
+ * @param {*} editor
+ */
+export const withLayout = ({ editor, frontmatter }) => {
+  const { normalizeNode } = editor
+
+  editor.normalizeNode = ([node, path]) => {
+    console.log("#normalizing ", node, path)
+    if (path.length === 0) {
+      if (editor.children.length < 1) {
+        const title = {
+          type: "title",
+          children: [{ text: frontmatter.title || "" }],
+        }
+        Transforms.insertNodes(editor, title, { at: path.concat(0) })
+      }
+
+      if (editor.children.length < 2) {
+        const paragraph = { type: "paragraph", children: [{ text: "" }] }
+        Transforms.insertNodes(editor, paragraph, { at: path.concat(1) })
+      }
+
+      for (const [child, childPath] of Node.children(editor, path)) {
+        const type = childPath[0] === 0 ? "title" : "paragraph"
+
+        if (child.type !== type) {
+          Transforms.setNodes(editor, { type }, { at: childPath })
+        }
+      }
+    }
+
+    return normalizeNode([node, path])
+  }
+
+  return editor
 }

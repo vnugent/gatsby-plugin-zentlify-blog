@@ -5,16 +5,14 @@ import { navigate } from "@reach/router"
 
 import { GitClient } from "@tinacms/git-client"
 import CoolEditor from "../components/CoolEditor"
-import slugify from "slugify"
-
-import catNames from "cat-names"
+import { new_draft } from "../components/slate-utils"
 
 export default ({ raw, onFinish, location, ...rest }) => {
   const slug = get_slug(location)
   slug && console.log("Trying to load ", slug)
 
   const [loading, setLoading] = useState(false)
-  const [data, setData] = useState(undefined)
+  const [pageData, setData] = useState(new_draft())
   const [error, setError] = useState(false)
 
   useEffect(() => {
@@ -25,7 +23,11 @@ export default ({ raw, onFinish, location, ...rest }) => {
         console.log("#fetching data", result)
         if (result.ok) {
           const json = await result.json()
-          setData(json.result.data.markdownRemark.rawMarkdownBody)
+          const {
+            frontmatter,
+            rawMarkdownBody,
+          } = json.result.data.markdownRemark
+          setData({ frontmatter, body: rawMarkdownBody })
         } else {
           setError(true)
           console.log("#Error loading post ", result.status)
@@ -71,7 +73,7 @@ export default ({ raw, onFinish, location, ...rest }) => {
       } else {
         console.log("Slug not changed - updating current doc")
 
-        setData(body)
+        setData({ frontmatter, body })
       }
     } catch (error) {}
   }
@@ -88,7 +90,7 @@ export default ({ raw, onFinish, location, ...rest }) => {
       <Link to="/admin">Back to dashboard</Link>
       {loading && <div>loading ...</div>}
       {error && <div>error occurred while loading post</div>}
-      {!loading && <CoolEditor raw={data} onSave={onSave} />}
+      {!loading && <CoolEditor pageData={pageData} onSave={onSave} />}
     </div>
   )
 }

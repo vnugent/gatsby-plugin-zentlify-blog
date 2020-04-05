@@ -10,6 +10,8 @@ import {
   to_markdown,
   html_to_slate,
   gen_slug_from,
+  withLayout,
+  random_slug
 } from "./slate-utils"
 
 const HOTKEYS = {
@@ -20,52 +22,59 @@ const HOTKEYS = {
 
 const LIST_TYPES = ["numbered-list", "bulleted-list"]
 
-const CoolEditor = ({ raw, onSave }) => {
+const CoolEditor = ({ pageData, onSave }) => {
+
   const _initialValue = [
+    {
+      type: "title",
+      children: [{ text: "Untitled" }],
+    },
     {
       type: "paragraph",
       children: [{ text: "" }],
     },
   ]
-  const initialValue = raw ? html_to_slate(raw) : _initialValue
+  const initialValue = pageData.body
+    ? html_to_slate(pageData)
+    : _initialValue
   console.log("#initial ", initialValue)
   const [value, setValue] = useState(initialValue)
   const renderElement = useCallback(props => <Element {...props} />, [])
   const renderLeaf = useCallback(props => <Leaf {...props} />, [])
-  const editor = useMemo(() => withHistory(withReact(createEditor())), [])
+  const editor = useMemo(
+    () =>
+      withLayout({
+        editor: withHistory(withReact(createEditor())),
+        pageData,
+      }),
+    []
+  )
 
   const documentRef = useRef(value)
   documentRef.current = value
 
-  // const timer = setInterval(() => {
-  //   Node.string(editor) !== "" && onPresave(documentRef.current)
-  // }, 45000)
-
-  // timer()
-
   useEffect(() => {
     const timer = setInterval(() => {
-      Node.string(editor) !== "" && onPresave(documentRef.current)
+      //Node.string(editor) !== "" && onPresave(documentRef.current)
     }, 45000)
+
     return () => clearInterval(timer)
   }, [])
 
   const onPresave = document => {
-    const html_body = serialize({ children: document ? document : value })
-    const title = Editor.first(editor, [])[0].text
-    const slug = gen_slug_from(title)
+    const {title, body} = serialize({ children: document ? document : value })
     const frontmatter = {
-      title,
-      slug,
+      title: title || "Untitled",
+      slug: gen_slug_from(title || pageData.frontmatter.title),
       date: new Date().toISOString(),
     }
 
     onSave({
       frontmatter,
-      body: html_body,
+      body,
       whole_document: to_markdown({
         frontmatter,
-        html_body,
+        body,
       }),
     })
   }
@@ -81,7 +90,7 @@ const CoolEditor = ({ raw, onSave }) => {
         <BlockButton format="block-quote" icon="Quote" />
         <BlockButton format="numbered-list" icon="format_list_numbered" />
         <BlockButton format="bulleted-list" icon="format_list_bulleted" />
-        <button onClick={onPresave}>Save draft</button>
+        <button onClick={()=>onPresave()}>Save draft</button>
       </Toolbar>
       <Editable
         renderElement={renderElement}
