@@ -1,11 +1,16 @@
-import React, { useCallback, useMemo, useState } from "react"
+import React, { useCallback, useMemo, useState, useEffect, useRef } from "react"
 import isHotkey from "is-hotkey"
 import { Editable, withReact, useSlate, Slate, useEditor } from "slate-react"
-import { Editor, Transforms, createEditor } from "slate"
+import { Editor, Transforms, createEditor, Node } from "slate"
 import { withHistory } from "slate-history"
 
 import { Button, Icon, Toolbar } from "./SlateComponents"
-import { serialize, to_markdown, html_to_slate, gen_slug_from } from "./slate-utils"
+import {
+  serialize,
+  to_markdown,
+  html_to_slate,
+  gen_slug_from,
+} from "./slate-utils"
 
 const HOTKEYS = {
   "mod+b": "bold",
@@ -29,20 +34,40 @@ const CoolEditor = ({ raw, onSave }) => {
   const renderLeaf = useCallback(props => <Leaf {...props} />, [])
   const editor = useMemo(() => withHistory(withReact(createEditor())), [])
 
-  const onPresave = () => {
-    const html_body = serialize({ children: value })
-    const title = Editor.first(editor,[])[0].text;
-    const slug = gen_slug_from(title);
+  const documentRef = useRef(value)
+  documentRef.current = value
+
+  // const timer = setInterval(() => {
+  //   Node.string(editor) !== "" && onPresave(documentRef.current)
+  // }, 45000)
+
+  // timer()
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      Node.string(editor) !== "" && onPresave(documentRef.current)
+    }, 45000)
+    return () => clearInterval(timer)
+  }, [])
+
+  const onPresave = document => {
+    const html_body = serialize({ children: document ? document : value })
+    const title = Editor.first(editor, [])[0].text
+    const slug = gen_slug_from(title)
     const frontmatter = {
       title,
       slug,
       date: new Date().toISOString(),
     }
-    const content = to_markdown({
+
+    onSave({
       frontmatter,
-      html_body,
+      body: html_body,
+      whole_document: to_markdown({
+        frontmatter,
+        html_body,
+      }),
     })
-    onSave({frontmatter, content} )
   }
 
   return (

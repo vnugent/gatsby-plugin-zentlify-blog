@@ -5,7 +5,6 @@ import slugify from "slugify"
 
 export const serialize = node => {
   if (Text.isText(node)) {
-    console.log(node.text, node)
     if (node.text.trim() === "") {
       return "&nbsp;"
     }
@@ -52,7 +51,6 @@ export const deserialize = el => {
   }
 
   const children = Array.from(el.childNodes).map(deserialize)
-  console.log(" - children ", children)
   switch (el.nodeName.toUpperCase()) {
     case "BODY":
       return jsx("fragment", {}, children)
@@ -82,7 +80,6 @@ export const deserialize = el => {
         children
       )
     default:
-      console.log("Default ", el)
       return el.textContent
   }
 }

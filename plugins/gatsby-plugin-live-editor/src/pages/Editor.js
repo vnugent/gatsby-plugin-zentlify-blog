@@ -40,16 +40,16 @@ export default ({ raw, onFinish, location, ...rest }) => {
     slug && fetchData()
   }, [])
 
-  const onSave = async ({ frontmatter, content }) => {
+  const onSave = async ({ frontmatter, body, whole_document }) => {
     // const slug = title
     //   ? slugify(title)
     //   : `${catNames.random()}-${catNames.random()}-${Math.random()
     //       .toString(36)
     //       .substr(2, 5)}`
 
-    const slug_has_changed = (slug !== frontmatter.slug) || false
+    const slug_has_changed = slug !== frontmatter.slug || false
 
-    console.log("# on Save  ", slug, frontmatter, content)
+    console.log("# on Save  ", slug, frontmatter, body)
     if (slug && slug_has_changed) {
       console.log("existing slug renamed - delete old one")
       await gitClient.deleteFromDisk({
@@ -63,10 +63,15 @@ export default ({ raw, onFinish, location, ...rest }) => {
     try {
       await gitClient.writeToDisk({
         fileRelativePath: `${frontmatter.slug}/index.md`,
-        content: content,
+        content: whole_document,
       })
       if (slug_has_changed) {
+        console.log("Slug changed - reloading page")
         navigate(`./Editor?p=${frontmatter.slug}`)
+      } else {
+        console.log("Slug not changed - updating current doc")
+
+        setData(body)
       }
     } catch (error) {}
   }
