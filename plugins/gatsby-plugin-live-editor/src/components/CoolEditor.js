@@ -11,7 +11,7 @@ import {
   html_to_slate,
   gen_slug_from,
   withLayout,
-  random_slug
+  random_slug,
 } from "./slate-utils"
 
 const HOTKEYS = {
@@ -23,7 +23,6 @@ const HOTKEYS = {
 const LIST_TYPES = ["numbered-list", "bulleted-list"]
 
 const CoolEditor = ({ pageData, onSave }) => {
-
   const _initialValue = [
     {
       type: "title",
@@ -34,9 +33,7 @@ const CoolEditor = ({ pageData, onSave }) => {
       children: [{ text: "" }],
     },
   ]
-  const initialValue = pageData.body
-    ? html_to_slate(pageData)
-    : _initialValue
+  const initialValue = pageData.body ? html_to_slate(pageData) : _initialValue
   console.log("#initial ", initialValue)
   const [value, setValue] = useState(initialValue)
   const renderElement = useCallback(props => <Element {...props} />, [])
@@ -62,7 +59,7 @@ const CoolEditor = ({ pageData, onSave }) => {
   }, [])
 
   const onPresave = document => {
-    const {title, body} = serialize({ children: document ? document : value })
+    const { title, body } = serialize({ children: document ? document : value })
     const frontmatter = {
       title: title || "Untitled",
       slug: gen_slug_from(title || pageData.frontmatter.title),
@@ -85,12 +82,12 @@ const CoolEditor = ({ pageData, onSave }) => {
         <MarkButton format="strong" icon="format_bold" />
         <MarkButton format="italic" icon="format_italic" />
         {/* <MarkButton format="code" icon="code" /> */}
-        <BlockButton format="title" icon="title" />
-        <BlockButton format="subtitle" icon="subtitle" />
-        <BlockButton format="block-quote" icon="Quote" />
+        {/* <BlockButton format="title" icon="title" /> */}
+        <BlockButton format="subheader" icon="looks_two" />
+        <BlockButton format="block-quote" icon="format_quote" />
         <BlockButton format="numbered-list" icon="format_list_numbered" />
         <BlockButton format="bulleted-list" icon="format_list_bulleted" />
-        <button onClick={()=>onPresave()}>Save draft</button>
+        <button onClick={() => onPresave()}>Save draft</button>
       </Toolbar>
       <Editable
         renderElement={renderElement}
@@ -149,19 +146,18 @@ const toggleMark = (editor, format) => {
 }
 
 const isBlockActive = (editor, format) => {
-  const nodes = Array.from(editor.children)
-  const [foo] = nodes.filter(n => n.type === format)
+  const foo = Array.from(
+    Editor.nodes(editor, {
+      match: n => {
+        console.log(" ---", n)
+        return n.type === format
+      },
+    })
+  )
 
-  const [match] = Editor.nodes(editor.children, {
-    match: n => {
-      console.log(" ---", n)
-      return n.type === format
-    },
-  })
-
-  console.log("isBlockActive? ", [match], editor)
-
-  return !!foo
+  console.log("isBlockActive? ", foo, editor)
+  const [match] = foo
+  return !!match
 }
 
 const isMarkActive = (editor, format) => {
@@ -177,14 +173,16 @@ const Element = ({ attributes, children, element }) => {
       return <ul {...attributes}>{children}</ul>
     case "title":
       return <h1 {...attributes}>{children}</h1>
-    case "subtitle":
-      return <h4 {...attributes}>{children}</h4>
+    case "subheader":
+      return <h2 {...attributes}>{children}</h2>
     case "list-item":
       return <li {...attributes}>{children}</li>
     case "numbered-list":
       return <ol {...attributes}>{children}</ol>
     case "section":
       return <section {...attributes}>{children}</section>
+    case "eof":
+      return <span>¶</span>
     default:
       return <p {...attributes}>{children}</p>
   }
@@ -214,15 +212,15 @@ const BlockButton = ({ format, icon }) => {
   const editor = useEditor()
 
   return (
-    <button
-      //active={isBlockActive(editor, format)}
+    <Button
+      active={isBlockActive(editor, format)}
       onMouseDown={event => {
         event.preventDefault()
         toggleBlock(editor, format)
       }}
     >
-      {icon}
-    </button>
+      <Icon>{icon}</Icon>
+    </Button>
   )
 }
 

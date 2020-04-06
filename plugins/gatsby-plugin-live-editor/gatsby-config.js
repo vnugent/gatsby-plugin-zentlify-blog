@@ -15,6 +15,14 @@ module.exports = {
     {
       resolve: 'gatsby-plugin-exclude',
       options: { paths: ['/___tina /**', ] },
+    },
+    {
+      resolve: 'gatsby-plugin-web-font-loader',
+      options: {
+        google: {
+          families: ['Material+Icons']
+        }
+      }
     }
   ]
 };

@@ -37,8 +37,14 @@ export const _serialize_body = node => {
     case "title":
       return "\n"
     // return `<h1>${children}</h1>`
-    case "subtitle":
-      return `<p class="subtitle">${children}</p>`
+    case "subheader":
+      return `<h2>${children}</h2>`
+    case "numbered-list":
+      return `<ol>${children}</ol>`
+    case "bulleted-list":
+      return `<ul>${children}</ol>`
+    case "list-item":
+      return `<li>${children}</li>`
     // case "b":
     //   return `<strong>${children}</strong>`
     // case "i":
@@ -92,9 +98,16 @@ export const deserialize = el => {
       return jsx("text", { strong: true }, children)
     case "I":
       return jsx("text", { italic: true }, children)
-
     case "H1":
       return jsx("element", { type: "title" }, children)
+    case "H2":
+      return jsx("element", { type: "subheader" }, children)
+    case "OL":
+      return jsx("element", { type: "numbered-list" }, children)
+    case "UL":
+      return jsx("element", { type: "bulleted-list" }, children)
+    case "LI":
+      return jsx("element", { type: "list-item" }, children)
     case "A":
       return jsx(
         "element",
@@ -168,11 +181,30 @@ export const withLayout = ({ editor, frontmatter }) => {
       }
 
       for (const [child, childPath] of Node.children(editor, path)) {
-        const type = childPath[0] === 0 ? "title" : "paragraph"
-
-        if (child.type !== type) {
-          Transforms.setNodes(editor, { type }, { at: childPath })
+        if (childPath[0] === 0) {
+          // first node always title
+          console.log(" --> first node: enforce header", child, childPath)
+          Transforms.setNodes(editor, { type: "title" }, { at: childPath })
+        } else {
+          console.log("    -- other ", child, childPath)
+          if (
+            childPath[0] === editor.children.length - 1 &&
+            (child.type === "numbered-list" || child.type === "bulleted-list")
+          ) {
+            console.log("last node is # list", child, childPath)
+            const paragraph = {
+              type: "paragraph",
+              children: [{ text: "" }],
+            }
+            Transforms.insertNodes(editor, paragraph, {at: [editor.children.length]})
+            return
+          }
         }
+        // const type = childPath[0] === 0 ? "title" : "paragraph"
+
+        // if (child.type !== type) {
+        //   Transforms.setNodes(editor, { type }, { at: [childPath[0] })
+        // }
       }
     }
 
