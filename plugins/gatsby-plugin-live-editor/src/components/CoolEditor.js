@@ -1,10 +1,10 @@
 import React, { useCallback, useMemo, useState, useEffect, useRef } from "react"
 import isHotkey from "is-hotkey"
-import { Editable, withReact, useSlate, Slate, useEditor } from "slate-react"
-import { Editor, Transforms, createEditor, Node } from "slate"
+import { Editable, withReact, Slate, ReactEditor } from "slate-react"
+import { Editor, createEditor } from "slate"
 import { withHistory } from "slate-history"
-
-import { Button, Icon, Toolbar } from "./SlateComponents"
+import { withLinks } from "../utils/LinkHelpers"
+import SlateToolbar, { toggleMark } from "./SlateToolbar"
 import {
   serialize,
   to_markdown,
@@ -20,28 +20,31 @@ const HOTKEYS = {
   "mod+`": "code",
 }
 
-const LIST_TYPES = ["numbered-list", "bulleted-list"]
+const _initialValue = [
+  {
+    type: "title",
+    children: [{ text: "Untitled" }],
+  },
+  {
+    type: "paragraph",
+    children: [{ text: "" }],
+  },
+]
 
 const CoolEditor = ({ pageData, onSave }) => {
-  const _initialValue = [
-    {
-      type: "title",
-      children: [{ text: "Untitled" }],
-    },
-    {
-      type: "paragraph",
-      children: [{ text: "" }],
-    },
-  ]
+  const [linkState, setOpenLink] = useState([false, ""])
   const initialValue = pageData.body ? html_to_slate(pageData) : _initialValue
   console.log("#initial ", initialValue)
   const [value, setValue] = useState(initialValue)
-  const renderElement = useCallback(props => <Element {...props} />, [])
+  const renderElement = useCallback(
+    props => <Element {...props} setOpenLink={setOpenLink} />,
+    []
+  )
   const renderLeaf = useCallback(props => <Leaf {...props} />, [])
   const editor = useMemo(
     () =>
       withLayout({
-        editor: withHistory(withReact(createEditor())),
+        editor: withLinks(withHistory(withReact(createEditor()))),
         pageData,
       }),
     []
@@ -54,9 +57,11 @@ const CoolEditor = ({ pageData, onSave }) => {
     const timer = setInterval(() => {
       //Node.string(editor) !== "" && onPresave(documentRef.current)
     }, 45000)
+    // not really working
+    !ReactEditor.isFocused() && ReactEditor.focus(editor);
 
     return () => clearInterval(timer)
-  }, [])
+  }, [linkState])
 
   const onPresave = document => {
     const { title, body } = serialize({ children: document ? document : value })
@@ -78,17 +83,9 @@ const CoolEditor = ({ pageData, onSave }) => {
 
   return (
     <Slate editor={editor} value={value} onChange={value => setValue(value)}>
-      <Toolbar>
-        <MarkButton format="strong" icon="format_bold" />
-        <MarkButton format="italic" icon="format_italic" />
-        {/* <MarkButton format="code" icon="code" /> */}
-        {/* <BlockButton format="title" icon="title" /> */}
-        <BlockButton format="subheader" icon="looks_two" />
-        <BlockButton format="block-quote" icon="format_quote" />
-        <BlockButton format="numbered-list" icon="format_list_numbered" />
-        <BlockButton format="bulleted-list" icon="format_list_bulleted" />
-        <button onClick={() => onPresave()}>Save draft</button>
-      </Toolbar>
+      <SlateToolbar linkState={linkState} setOpenLink={setOpenLink} />
+      <button onClick={() => onPresave()}>Save draft</button>
+
       <Editable
         renderElement={renderElement}
         renderLeaf={renderLeaf}
@@ -109,63 +106,7 @@ const CoolEditor = ({ pageData, onSave }) => {
   )
 }
 
-const toggleBlock = (editor, format) => {
-  const isActive = isBlockActive(editor, format)
-  const isList = LIST_TYPES.includes(format)
-
-  console.log("blog toggle ", format, isActive, editor)
-
-  Transforms.unwrapNodes(editor, {
-    match: n => LIST_TYPES.includes(n.type),
-    split: true,
-  })
-
-  Transforms.setNodes(editor, {
-    type: isActive ? "paragraph" : isList ? "list-item" : format,
-  })
-
-  // Transforms.setNodes(editor, {
-  //   type: isActive ? "paragraph" : format,
-  // })
-  if (!isActive && isList) {
-    const block = { type: format, children: [] }
-    Transforms.wrapNodes(editor, block)
-  }
-}
-
-const toggleMark = (editor, format) => {
-  const isActive = isMarkActive(editor, format)
-
-  console.log("toggle ", isActive, format, editor)
-
-  if (isActive) {
-    Editor.removeMark(editor, format)
-  } else {
-    Editor.addMark(editor, format, true)
-  }
-}
-
-const isBlockActive = (editor, format) => {
-  const foo = Array.from(
-    Editor.nodes(editor, {
-      match: n => {
-        console.log(" ---", n)
-        return n.type === format
-      },
-    })
-  )
-
-  console.log("isBlockActive? ", foo, editor)
-  const [match] = foo
-  return !!match
-}
-
-const isMarkActive = (editor, format) => {
-  const marks = Editor.marks(editor)
-  return marks ? marks[format] === true : false
-}
-
-const Element = ({ attributes, children, element }) => {
+const Element = ({ attributes, children, element, setOpenLink }) => {
   switch (element.type) {
     case "block-quote":
       return <blockquote {...attributes}>{children}</blockquote>
@@ -179,6 +120,19 @@ const Element = ({ attributes, children, element }) => {
       return <li {...attributes}>{children}</li>
     case "numbered-list":
       return <ol {...attributes}>{children}</ol>
+    case "link":
+      return (
+        <a
+          {...attributes}
+          href={element.url}
+          onClick={(event) => {
+            //event.preventDefault()
+            setOpenLink([true, element.url])
+          }}
+        >
+          {children}
+        </a>
+      )
     case "section":
       return <section {...attributes}>{children}</section>
     case "eof":
@@ -206,37 +160,6 @@ const Leaf = ({ attributes, children, leaf }) => {
   }
 
   return <span {...attributes}>{children}</span>
-}
-
-const BlockButton = ({ format, icon }) => {
-  const editor = useEditor()
-
-  return (
-    <Button
-      active={isBlockActive(editor, format)}
-      onMouseDown={event => {
-        event.preventDefault()
-        toggleBlock(editor, format)
-      }}
-    >
-      <Icon>{icon}</Icon>
-    </Button>
-  )
-}
-
-const MarkButton = ({ format, icon }) => {
-  const editor = useSlate()
-  return (
-    <Button
-      active={isMarkActive(editor, format)}
-      onMouseDown={event => {
-        event.preventDefault()
-        toggleMark(editor, format)
-      }}
-    >
-      <Icon>{icon}</Icon>
-    </Button>
-  )
 }
 
 export default CoolEditor
