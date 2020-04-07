@@ -1,22 +1,50 @@
-import { red } from '@material-ui/core/colors';
-import { createMuiTheme } from '@material-ui/core/styles';
+import { createMuiTheme, colors, withStyles } from "@material-ui/core"
+
+const breakpointValues = {
+  xs: 0,
+  sm: 600,
+  md: 810,
+  lg: 1280,
+  xl: 1020,
+}
 
 // A custom theme for this app
 const theme = createMuiTheme({
+  props: {
+    MuiButtonBase: {
+      disableRipple: true
+    }
+  },
+  typography: {
+    button: {
+      textTransform: "none",
+      fontSize: "1.2em"
+    }
+  },
   palette: {
     primary: {
-      main: '#556cd6',
+      main: `#ff4e20`,
     },
     secondary: {
-      main: '#19857b',
+      main: `#19857b`,
     },
     error: {
-      main: red.A400,
+      main: colors.red.A400,
     },
     background: {
-      default: '#fff',
+      default: `#fafafa`,
     },
   },
-});
+  breakpoints: { values: breakpointValues },
+})
 
-export default theme;
+export const GlobalCss = withStyles({
+  // @global is handled by jss-plugin-global.
+  "@global": {
+    ".MuiTypography-body1": {
+     // fontFamily: "ISO",
+      fontWeight: 400,
+      fontSize: "1.125em"
+    },
+  }})
+export default theme

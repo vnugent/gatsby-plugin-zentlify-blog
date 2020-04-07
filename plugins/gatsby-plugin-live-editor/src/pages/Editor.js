@@ -86,8 +86,7 @@ export default ({ raw, onFinish, location, ...rest }) => {
   // })
 
   return (
-    <div style={{ maxWidth: "750px", vh: "100vh", margin: "0 auto" }}>
-      <Link to="/admin">Back to dashboard</Link>
+    <div>
       {loading && <div>loading ...</div>}
       {error && <div>error occurred while loading post</div>}
       {!loading && <CoolEditor pageData={pageData} onSave={onSave} />}

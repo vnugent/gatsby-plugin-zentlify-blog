@@ -183,10 +183,10 @@ export const withLayout = ({ editor, frontmatter }) => {
       for (const [child, childPath] of Node.children(editor, path)) {
         if (childPath[0] === 0) {
           // first node always title
-          console.log(" --> first node: enforce header", child, childPath)
+          //console.log(" --> first node: enforce header", child, childPath)
           Transforms.setNodes(editor, { type: "title" }, { at: childPath })
         } else {
-          console.log("    -- other ", child, childPath)
+          //console.log("    -- other ", child, childPath)
           if (
             childPath[0] === editor.children.length - 1 &&
             (child.type === "numbered-list" || child.type === "bulleted-list")

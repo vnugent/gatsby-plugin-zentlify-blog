@@ -3,6 +3,9 @@ import isHotkey from "is-hotkey"
 import { Editable, withReact, Slate, ReactEditor } from "slate-react"
 import { Editor, createEditor } from "slate"
 import { withHistory } from "slate-history"
+
+import { AppBar, Toolbar, Container } from "@material-ui/core/"
+
 import { withLinks } from "../utils/LinkHelpers"
 import SlateToolbar, { toggleMark } from "./SlateToolbar"
 import {
@@ -31,7 +34,7 @@ const _initialValue = [
   },
 ]
 
-const CoolEditor = ({ pageData, onSave }) => {
+export default function CoolEditor({ pageData, onSave }) {
   const [linkState, setOpenLink] = useState([false, ""])
   const initialValue = pageData.body ? html_to_slate(pageData) : _initialValue
   console.log("#initial ", initialValue)
@@ -58,7 +61,7 @@ const CoolEditor = ({ pageData, onSave }) => {
       //Node.string(editor) !== "" && onPresave(documentRef.current)
     }, 45000)
     // not really working
-    !ReactEditor.isFocused() && ReactEditor.focus(editor);
+    !ReactEditor.isFocused() && ReactEditor.focus(editor)
 
     return () => clearInterval(timer)
   }, [linkState])
@@ -85,23 +88,24 @@ const CoolEditor = ({ pageData, onSave }) => {
     <Slate editor={editor} value={value} onChange={value => setValue(value)}>
       <SlateToolbar linkState={linkState} setOpenLink={setOpenLink} />
       <button onClick={() => onPresave()}>Save draft</button>
-
-      <Editable
-        renderElement={renderElement}
-        renderLeaf={renderLeaf}
-        placeholder="Enter some rich text…"
-        spellCheck
-        autoFocus
-        onKeyDown={event => {
-          for (const hotkey in HOTKEYS) {
-            if (isHotkey(hotkey, event)) {
-              event.preventDefault()
-              const mark = HOTKEYS[hotkey]
-              toggleMark(editor, mark)
+      <Container maxWidth="md">
+        <Editable
+          renderElement={renderElement}
+          renderLeaf={renderLeaf}
+          placeholder="Enter some rich text…"
+          spellCheck
+          autoFocus
+          onKeyDown={event => {
+            for (const hotkey in HOTKEYS) {
+              if (isHotkey(hotkey, event)) {
+                event.preventDefault()
+                const mark = HOTKEYS[hotkey]
+                toggleMark(editor, mark)
+              }
             }
-          }
-        }}
-      />
+          }}
+        />
+      </Container>
     </Slate>
   )
 }
@@ -125,7 +129,7 @@ const Element = ({ attributes, children, element, setOpenLink }) => {
         <a
           {...attributes}
           href={element.url}
-          onClick={(event) => {
+          onClick={event => {
             //event.preventDefault()
             setOpenLink([true, element.url])
           }}
@@ -138,7 +142,7 @@ const Element = ({ attributes, children, element, setOpenLink }) => {
     case "eof":
       return <span>¶</span>
     default:
-      return <p {...attributes}>{children}</p>
+      return <p {...attributes} className="main-editor-text">{children}</p>
   }
 }
 
@@ -161,5 +165,3 @@ const Leaf = ({ attributes, children, leaf }) => {
 
   return <span {...attributes}>{children}</span>
 }
-
-export default CoolEditor

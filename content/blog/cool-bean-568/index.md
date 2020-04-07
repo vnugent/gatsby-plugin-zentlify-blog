@@ -1,7 +1,7 @@
 ---
 title: Cool bean 568
 slug: cool-bean-568
-date: 2020-04-07T11:50:09.736Z
+date: 2020-04-07T18:19:19.547Z
 ---
 
-<p>Fondue bavarian bergkase <a href="google.com">caerphilly</a>. Bocconcini cream cheese cheesecake cheesy grin ricotta cheese and wine hard cheese gouda. Danish fontina squirty cheese cauliflower cheese bocconcini bavarian bergkase blue castello cheddar stilton.</p><h2>Brie chalk and cheese cheesy feet cheddar mozzarella port-salut squirty cheese who moved my cheese. Cheeseburger boursin.</h2><ol><li><strong>one</strong></li><li>two</li><li>three</li><li>four</li></ol><ul><li>A</li><li>B</li><li>C</li><p>&nbsp;</p><p>&nbsp;</p></ol><p>&nbsp;</p>
+<p>Fondue bavarian bergkase <a href="google.com">caerphilly</a>. Bocconcini cream cheese cheesecake cheesy grin ricotta cheese and wine hard cheese gouda. Danish fontina squirty cheese cauliflower cheese bocconcini bavarian bergkase blue castello cheddar stilton.</p><h2>Brie chalk and cheese cheesy feet cheddar mozzarella port-salut squirty cheese who moved my cheese. Cheeseburger boursin.</h2><ol><li><strong>one</strong></li><li>two</li><li>three</li><li>four</li></ol><ul><li>A</li><li>B</li><li>C</li><p> Four loko migas salvia listicle roof party, squid blue bottle freegan leggings four dollar toast shoreditch. Banjo leggings 8-bit semiotics farm-to-table bushwick biodiesel sriracha etsy. Ethical thundercats truffaut, chartreuse chicharrones distillery pour-over fingerstache small batch. </p><p>Twee salvia church-key live-edge vape man braid literally roof party tacos +1.Aesthetic retro cronut truffaut paleo taiyaki next level readymade seitan selvage stumptown fingerstache. </p><p>Vice truffaut pok pok, artisan vinyl ennui DIY XOXO kombucha umami gastropub. Truffaut trust fund kogi direct trade cornhole iceland. Raw denim tacos ennui kombucha 90&#39;s street art.</p><p>&nbsp;</p><p>&nbsp;</p></ol><p>&nbsp;</p>

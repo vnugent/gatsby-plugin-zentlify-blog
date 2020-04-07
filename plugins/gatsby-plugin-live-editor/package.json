@@ -5,6 +5,7 @@
   "author": "Nacho",
   "license": "MIT",
   "dependencies": {
+    "@material-ui/lab": "^4.0.0-alpha.48",
     "@material-ui/styles": "^4.9.6",
     "@mdx-js/react": "^1.5.8",
     "@tinacms/api-git": "^0.7.0",

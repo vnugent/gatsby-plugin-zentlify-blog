@@ -8,33 +8,61 @@ import {
   useEditor,
   ReactEditor,
 } from "slate-react"
-import { Editor, Transforms, createEditor, Node } from "slate"
-import { withHistory } from "slate-history"
-import { Button as MButton, Dialog } from "@material-ui/core"
-import { InsertLink } from "@material-ui/icons"
+import { Editor, Transforms, Node } from "slate"
+
+import {
+  Button as MButton,
+  AppBar,
+  Toolbar as MuiToolbar,
+  Container,
+  Divider,
+  withStyles,
+  makeStyles,
+} from "@material-ui/core"
+
+import { ToggleButton, ToggleButtonGroup } from "@material-ui/lab"
+
+import {
+  InsertLink,
+  FormatBoldRounded,
+  FormatItalic,
+  FormatListNumbered,
+  FormatListBulleted,
+  FormatQuote,
+} from "@material-ui/icons"
+
 import { Button, Icon, Toolbar } from "./SlateComponents"
-import { insertLink, isLinkActive, move_cursor} from "../utils/LinkHelpers"
+import { insertLink, isLinkActive, move_cursor } from "../utils/LinkHelpers"
 import LinkEditorPopup from "./LinkEditorPopup"
 import LinkAddPopup from "./LinkAddPopup"
 
 export default function SlateToolbar({ linkState, setOpenLink }) {
   const editor = useSlate()
   const [addLinkPopup, setAddLinkPopup] = useState([false, []])
+  const classes = useStyles()
+
   return (
-    <div>
-      <Toolbar>
-        <MarkButton format="strong" icon="format_bold" />
-        <MarkButton format="italic" icon="format_italic" />
+    <FloatAppBar>
+      <ToggleButtonGroup size="small">
+        <MarkButton2 format="strong" icon={<FormatBoldRounded />} />
+        <MarkButton2 format="italic" icon={<FormatItalic />} />
+        <MarkButton2 format="subheader" text="Header" />
+
         {/* <MarkButton format="code" icon="code" /> */}
         {/* <BlockButton format="title" icon="title" /> */}
-        <BlockButton format="subheader" icon="looks_two" />
+        {/* <BlockButton format="subheader" icon="looks_two" /> */}
+
+        <Divider orientation="vertical" className={classes.divider} />
+
+        <MarkButton2 format="numbered-list" icon={<FormatListNumbered />} />
+        <MarkButton2 format="bulleted-list" icon={<FormatListBulleted />} />
+        <MarkButton2 format="block-quote" icon={<FormatQuote />} />
+
+        <Divider orientation="vertical" className={classes.divider} />
 
         <LinkButton editor={editor} setAddLinkPopup={setAddLinkPopup} />
+      </ToggleButtonGroup>
 
-        <BlockButton format="numbered-list" icon="format_list_numbered" />
-        <BlockButton format="bulleted-list" icon="format_list_bulleted" />
-        <BlockButton format="block-quote" icon="format_quote" />
-      </Toolbar>
       <LinkAddPopup
         open={addLinkPopup[0]}
         path={addLinkPopup[1]}
@@ -56,7 +84,7 @@ export default function SlateToolbar({ linkState, setOpenLink }) {
           setOpenLink(e)
         }}
       />
-    </div>
+    </FloatAppBar>
   )
 }
 
@@ -121,11 +149,10 @@ const isMarkActive = (editor, format) => {
 }
 
 const LinkButton = ({ editor, setAddLinkPopup }) => {
-  //const editor = useSlate()
-
   const hasLink = isLinkActive(editor)
   return (
-    <MButton
+    <ToggleButton
+      size="small"
       variant={hasLink ? "contained" : "outlined"}
       onClick={event => {
         setAddLinkPopup([true, editor.selection])
@@ -133,7 +160,7 @@ const LinkButton = ({ editor, setAddLinkPopup }) => {
       }}
     >
       <InsertLink />
-    </MButton>
+    </ToggleButton>
   )
 }
 
@@ -153,6 +180,24 @@ const BlockButton = ({ format, icon }) => {
   )
 }
 
+const MarkButton2 = ({ format, icon, text }) => {
+  const editor = useSlate()
+  return (
+    <ToggleButton
+      size="small"
+      value="left"
+      aria-label="left aligned"
+      active={isMarkActive(editor, format)}
+      onMouseDown={event => {
+        event.preventDefault()
+        toggleMark(editor, format)
+      }}
+    >
+      {icon ? icon : text}
+    </ToggleButton>
+  )
+}
+
 const MarkButton = ({ format, icon }) => {
   const editor = useSlate()
   return (
@@ -167,3 +212,31 @@ const MarkButton = ({ format, icon }) => {
     </Button>
   )
 }
+
+const CoolAppBar = withStyles(theme => ({
+  root: {
+    backgroundColor: "#fafafa",
+    //boxShadow: "none",
+  },
+}))(AppBar)
+
+const FloatAppBar = ({ children }) => (
+  <CoolAppBar>
+    <MuiToolbar>
+      <Container maxWidth="md">{children}</Container>
+    </MuiToolbar>
+  </CoolAppBar>
+)
+
+const useStyles = makeStyles(theme => ({
+  paper: {
+    display: "flex",
+    border: `1px solid ${theme.palette.divider}`,
+    flexWrap: "wrap",
+  },
+  divider: {
+    //alignSelf: 'stretch',
+    height: "auto",
+    margin: theme.spacing(1, 0.5),
+  },
+}))
