@@ -12,14 +12,14 @@ const breakpointValues = {
 const theme = createMuiTheme({
   props: {
     MuiButtonBase: {
-      disableRipple: true
-    }
+      disableRipple: true,
+    },
   },
   typography: {
     button: {
       textTransform: "none",
-      fontSize: "1.2em"
-    }
+      fontSize: "1.2em",
+    },
   },
   palette: {
     primary: {
@@ -42,9 +42,10 @@ export const GlobalCss = withStyles({
   // @global is handled by jss-plugin-global.
   "@global": {
     ".MuiTypography-body1": {
-     // fontFamily: "ISO",
+      // fontFamily: "ISO",
       fontWeight: 400,
-      fontSize: "1.125em"
+      fontSize: "1.125em",
     },
-  }})
+  },
+})(() => null)
 export default theme

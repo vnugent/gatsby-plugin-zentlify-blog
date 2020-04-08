@@ -88,7 +88,7 @@ export default function CoolEditor({ pageData, onSave }) {
     <Slate editor={editor} value={value} onChange={value => setValue(value)}>
       <SlateToolbar linkState={linkState} setOpenLink={setOpenLink} />
       <button onClick={() => onPresave()}>Save draft</button>
-      <Container maxWidth="md">
+      <Container maxWidth="md" style={{marginTop: "0px"}}>
         <Editable
           renderElement={renderElement}
           renderLeaf={renderLeaf}

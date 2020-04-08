@@ -11,14 +11,16 @@ import {
 import { Editor, Transforms, Node } from "slate"
 
 import {
+  Grid,
   Button as MButton,
   AppBar,
   Toolbar as MuiToolbar,
   Container,
   Divider,
-  withStyles,
-  makeStyles,
+  Paper,
+  Hidden,
 } from "@material-ui/core"
+import { makeStyles, withStyles } from "@material-ui/core/styles"
 
 import { ToggleButton, ToggleButtonGroup } from "@material-ui/lab"
 
@@ -29,6 +31,8 @@ import {
   FormatListNumbered,
   FormatListBulleted,
   FormatQuote,
+  DnsOutlined
+
 } from "@material-ui/icons"
 
 import { Button, Icon, Toolbar } from "./SlateComponents"
@@ -43,26 +47,23 @@ export default function SlateToolbar({ linkState, setOpenLink }) {
 
   return (
     <FloatAppBar>
-      <ToggleButtonGroup size="small">
-        <MarkButton2 format="strong" icon={<FormatBoldRounded />} />
-        <MarkButton2 format="italic" icon={<FormatItalic />} />
-        <MarkButton2 format="subheader" text="Header" />
-
-        {/* <MarkButton format="code" icon="code" /> */}
-        {/* <BlockButton format="title" icon="title" /> */}
-        {/* <BlockButton format="subheader" icon="looks_two" /> */}
-
+      <MuiToolbar>
+        <StyledToggleButtonGroup size="small">
+          <MarkButton2 format="strong" icon={<FormatBoldRounded />} />
+          <MarkButton2 format="italic" icon={<FormatItalic />} />
+          <MarkButton2 format="subheader" text="Header" />
+          <MarkButton2 format="block-quote" icon={<FormatQuote />} />
+        </StyledToggleButtonGroup>
         <Divider orientation="vertical" className={classes.divider} />
-
-        <MarkButton2 format="numbered-list" icon={<FormatListNumbered />} />
-        <MarkButton2 format="bulleted-list" icon={<FormatListBulleted />} />
-        <MarkButton2 format="block-quote" icon={<FormatQuote />} />
-
+        <StyledToggleButtonGroup size="small">
+          <MarkButton2 format="numbered-list" icon={<FormatListNumbered />} />
+          <MarkButton2 format="bulleted-list" icon={<FormatListBulleted />} />
+        </StyledToggleButtonGroup>
         <Divider orientation="vertical" className={classes.divider} />
-
-        <LinkButton editor={editor} setAddLinkPopup={setAddLinkPopup} />
-      </ToggleButtonGroup>
-
+        <StyledToggleButtonGroup size="small">
+          <LinkButton editor={editor} setAddLinkPopup={setAddLinkPopup} />
+        </StyledToggleButtonGroup>
+      </MuiToolbar>
       <LinkAddPopup
         open={addLinkPopup[0]}
         path={addLinkPopup[1]}
@@ -84,6 +85,10 @@ export default function SlateToolbar({ linkState, setOpenLink }) {
           setOpenLink(e)
         }}
       />
+      <MuiToolbar>
+        <StyledToggleButton>SEO</StyledToggleButton>
+        <ToggleButton>Publish</ToggleButton>
+      </MuiToolbar>
     </FloatAppBar>
   )
 }
@@ -151,7 +156,7 @@ const isMarkActive = (editor, format) => {
 const LinkButton = ({ editor, setAddLinkPopup }) => {
   const hasLink = isLinkActive(editor)
   return (
-    <ToggleButton
+    <StyledToggleButton
       size="small"
       variant={hasLink ? "contained" : "outlined"}
       onClick={event => {
@@ -160,7 +165,7 @@ const LinkButton = ({ editor, setAddLinkPopup }) => {
       }}
     >
       <InsertLink />
-    </ToggleButton>
+    </StyledToggleButton>
   )
 }
 
@@ -183,7 +188,7 @@ const BlockButton = ({ format, icon }) => {
 const MarkButton2 = ({ format, icon, text }) => {
   const editor = useSlate()
   return (
-    <ToggleButton
+    <StyledToggleButton
       size="small"
       value="left"
       aria-label="left aligned"
@@ -193,8 +198,8 @@ const MarkButton2 = ({ format, icon, text }) => {
         toggleMark(editor, format)
       }}
     >
-      {icon ? icon : text}
-    </ToggleButton>
+      {icon ? icon : <strong>{text}</strong>}
+    </StyledToggleButton>
   )
 }
 
@@ -222,20 +227,72 @@ const CoolAppBar = withStyles(theme => ({
 
 const FloatAppBar = ({ children }) => (
   <CoolAppBar>
-    <MuiToolbar>
-      <Container maxWidth="md">{children}</Container>
-    </MuiToolbar>
+    <Container
+      maxWidth="lg"
+      // style={{
+      //   flexGrow: 1,
+      //   flexDirection: "row",
+      //   justifyContent: "space-around",
+      // }}
+    >
+      <Grid container alignItems="center" justifyContent="space-between">
+        <Hidden mdDown>
+          <Grid item md={1} style={{ zIndex: 2000, background: "#bcbaba" }}>
+            <InsertLink />
+          </Grid>
+        </Hidden>
+        <Grid item sm={12} md={10}>
+          <Container
+            maxWidth="md"
+            style={{
+              display: "flex",
+              flexGrow: 1,
+              justifyContent: "space-between",
+            }}
+          >
+            {children}
+          </Container>
+        </Grid>
+        <Grid item md={1}>
+          <Hidden mdDown>
+            <Button><DnsOutlined/></Button>
+          </Hidden>
+        </Grid>
+      </Grid>
+    </Container>
   </CoolAppBar>
 )
 
+const StyledToggleButton = withStyles(theme => ({
+  root: {
+    margin: theme.spacing(0.5),
+    border: "none",
+    padding: theme.spacing(0, 1),
+  },
+}))(ToggleButton)
+
+const StyledToggleButtonGroup = withStyles(theme => ({
+  grouped: {
+    margin: theme.spacing(0.5),
+    border: "none",
+    padding: theme.spacing(0, 1),
+    "&:not(:first-child)": {
+      borderRadius: theme.shape.borderRadius,
+    },
+    "&:first-child": {
+      borderRadius: theme.shape.borderRadius,
+    },
+  },
+}))(ToggleButtonGroup)
+
 const useStyles = makeStyles(theme => ({
-  paper: {
+  formatToolbar: {
     display: "flex",
     border: `1px solid ${theme.palette.divider}`,
     flexWrap: "wrap",
   },
   divider: {
-    //alignSelf: 'stretch',
+    alignSelf: "stretch",
     height: "auto",
     margin: theme.spacing(1, 0.5),
   },
