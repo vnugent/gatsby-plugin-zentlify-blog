@@ -125,8 +125,8 @@ export const deserialize = el => {
  * @param {html_body }
  */
 export const to_markdown = ({ frontmatter, body }) => {
-  const { title, slug, date } = frontmatter
-  return `---\ntitle: ${title}\nslug: ${slug}\ndate: ${date}\n---\n${body}`
+  const { title, description, slug, date } = frontmatter
+  return `---\ntitle: ${title}\ndescription: ${description}\nslug: ${slug}\ndate: ${date}\n---\n${body}`
 }
 
 export const new_draft = () => {
@@ -142,9 +142,9 @@ export const new_draft = () => {
 /**
  * Generate post slug from string (typically post's title)
  * @param  str
- * @param limit number of words (default = 12)
+ * @param limit number of words (default = 15)
  */
-export const gen_slug_from = (str, limit = 12) => {
+export const gen_slug_from = (str, limit = 15) => {
   if (!str) {
     return random_slug()
   }

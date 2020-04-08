@@ -12,13 +12,13 @@ import { Editor, Transforms, Node } from "slate"
 
 import {
   Grid,
-  Button as MButton,
   AppBar,
-  Toolbar as MuiToolbar,
+  Toolbar,
   Container,
   Divider,
   Paper,
   Hidden,
+  Button,
 } from "@material-ui/core"
 import { makeStyles, withStyles } from "@material-ui/core/styles"
 
@@ -31,11 +31,9 @@ import {
   FormatListNumbered,
   FormatListBulleted,
   FormatQuote,
-  DnsOutlined
-
+  DnsOutlined,
 } from "@material-ui/icons"
 
-import { Button, Icon, Toolbar } from "./SlateComponents"
 import { insertLink, isLinkActive, move_cursor } from "../utils/LinkHelpers"
 import LinkEditorPopup from "./LinkEditorPopup"
 import LinkAddPopup from "./LinkAddPopup"
@@ -47,12 +45,16 @@ export default function SlateToolbar({ linkState, setOpenLink }) {
 
   return (
     <FloatAppBar>
-      <MuiToolbar>
+      <SlimToolbar>
         <StyledToggleButtonGroup size="small">
           <MarkButton2 format="strong" icon={<FormatBoldRounded />} />
           <MarkButton2 format="italic" icon={<FormatItalic />} />
-          <MarkButton2 format="subheader" text="Header" />
-          <MarkButton2 format="block-quote" icon={<FormatQuote />} />
+          <BlockButton editor={editor} format="subheader" icon="Header" />
+          <BlockButton
+            editor={editor}
+            format="block-quote"
+            icon={<FormatQuote />}
+          />
         </StyledToggleButtonGroup>
         <Divider orientation="vertical" className={classes.divider} />
         <StyledToggleButtonGroup size="small">
@@ -63,7 +65,7 @@ export default function SlateToolbar({ linkState, setOpenLink }) {
         <StyledToggleButtonGroup size="small">
           <LinkButton editor={editor} setAddLinkPopup={setAddLinkPopup} />
         </StyledToggleButtonGroup>
-      </MuiToolbar>
+      </SlimToolbar>
       <LinkAddPopup
         open={addLinkPopup[0]}
         path={addLinkPopup[1]}
@@ -85,10 +87,11 @@ export default function SlateToolbar({ linkState, setOpenLink }) {
           setOpenLink(e)
         }}
       />
-      <MuiToolbar>
-        <StyledToggleButton>SEO</StyledToggleButton>
-        <ToggleButton>Publish</ToggleButton>
-      </MuiToolbar>
+      <SlimToolbar>
+        <Button size="small" color="secondary" variant="contained">
+          Publish
+        </Button>
+      </SlimToolbar>
     </FloatAppBar>
   )
 }
@@ -98,8 +101,6 @@ const LIST_TYPES = ["numbered-list", "bulleted-list"]
 const toggleBlock = (editor, format) => {
   const isActive = isBlockActive(editor, format)
   const isList = LIST_TYPES.includes(format)
-
-  console.log("blog toggle ", format, isActive, editor)
 
   Transforms.unwrapNodes(editor, {
     match: n => LIST_TYPES.includes(n.type),
@@ -122,8 +123,6 @@ const toggleBlock = (editor, format) => {
 export const toggleMark = (editor, format) => {
   const isActive = isMarkActive(editor, format)
 
-  console.log("toggle ", isActive, format, editor)
-
   if (isActive) {
     Editor.removeMark(editor, format)
   } else {
@@ -132,7 +131,6 @@ export const toggleMark = (editor, format) => {
 }
 
 const isBlockActive = (editor, format) => {
-  console.log("# isBlockActive  ", editor, format)
   const foo = Array.from(
     Editor.nodes(editor, {
       match: n => {
@@ -142,13 +140,11 @@ const isBlockActive = (editor, format) => {
     })
   )
 
-  // console.log("isBlockActive? ", foo, editor)
   const [match] = foo
   return !!match
 }
 
 const isMarkActive = (editor, format) => {
-  console.log("#isMarkActive  ", editor, format)
   const marks = Editor.marks(editor)
   return marks ? marks[format] === true : false
 }
@@ -161,27 +157,27 @@ const LinkButton = ({ editor, setAddLinkPopup }) => {
       variant={hasLink ? "contained" : "outlined"}
       onClick={event => {
         setAddLinkPopup([true, editor.selection])
-        //const url = window.prompt("Enter the URL of the link:")
       }}
+      value=""
     >
       <InsertLink />
     </StyledToggleButton>
   )
 }
 
-const BlockButton = ({ format, icon }) => {
-  const editor = useEditor()
-
+const BlockButton = ({ editor, format, icon }) => {
   return (
-    <Button
-      active={isBlockActive(editor, format)}
+    <StyledToggleButton
+      size="small"
+      selected={isBlockActive(editor, format)}
       onMouseDown={event => {
         event.preventDefault()
         toggleBlock(editor, format)
       }}
+      value=""
     >
-      <Icon>{icon}</Icon>
-    </Button>
+      {icon}
+    </StyledToggleButton>
   )
 }
 
@@ -192,7 +188,7 @@ const MarkButton2 = ({ format, icon, text }) => {
       size="small"
       value="left"
       aria-label="left aligned"
-      active={isMarkActive(editor, format)}
+      selected={isMarkActive(editor, format)}
       onMouseDown={event => {
         event.preventDefault()
         toggleMark(editor, format)
@@ -203,20 +199,20 @@ const MarkButton2 = ({ format, icon, text }) => {
   )
 }
 
-const MarkButton = ({ format, icon }) => {
-  const editor = useSlate()
-  return (
-    <Button
-      active={isMarkActive(editor, format)}
-      onMouseDown={event => {
-        event.preventDefault()
-        toggleMark(editor, format)
-      }}
-    >
-      <Icon>{icon}</Icon>
-    </Button>
-  )
-}
+// const MarkButton = ({ format, icon }) => {
+//   const editor = useSlate()
+//   return (
+//     <Button
+//       active={isMarkActive(editor, format)}
+//       onMouseDown={event => {
+//         event.preventDefault()
+//         toggleMark(editor, format)
+//       }}
+//     >
+//       <Icon>{icon}</Icon>
+//     </Button>
+//   )
+// }
 
 const CoolAppBar = withStyles(theme => ({
   root: {
@@ -225,26 +221,28 @@ const CoolAppBar = withStyles(theme => ({
   },
 }))(AppBar)
 
+const SlimToolbar = withStyles(theme => ({
+  root: {
+    margin: 0,
+    paddingLeft: 0,
+    paddingRight: 0,
+  },
+}))(Toolbar)
+
 const FloatAppBar = ({ children }) => (
   <CoolAppBar>
-    <Container
-      maxWidth="lg"
-      // style={{
-      //   flexGrow: 1,
-      //   flexDirection: "row",
-      //   justifyContent: "space-around",
-      // }}
-    >
-      <Grid container alignItems="center" justifyContent="space-between">
+    <Container maxWidth="lg">
+      <Grid container alignItems="center" justify="space-between">
         <Hidden mdDown>
-          <Grid item md={1} style={{ zIndex: 2000, background: "#bcbaba" }}>
-            <InsertLink />
+          <Grid item md={1}>
+            {/* Branding here */}
           </Grid>
         </Hidden>
         <Grid item sm={12} md={10}>
           <Container
             maxWidth="md"
             style={{
+              padding: 0,
               display: "flex",
               flexGrow: 1,
               justifyContent: "space-between",
@@ -255,7 +253,9 @@ const FloatAppBar = ({ children }) => (
         </Grid>
         <Grid item md={1}>
           <Hidden mdDown>
-            <Button><DnsOutlined/></Button>
+            <Button>
+              <DnsOutlined />
+            </Button>
           </Hidden>
         </Grid>
       </Grid>

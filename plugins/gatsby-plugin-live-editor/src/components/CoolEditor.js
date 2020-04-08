@@ -4,10 +4,12 @@ import { Editable, withReact, Slate, ReactEditor } from "slate-react"
 import { Editor, createEditor } from "slate"
 import { withHistory } from "slate-history"
 
-import { AppBar, Toolbar, Container } from "@material-ui/core/"
+import { Container, Button, Box } from "@material-ui/core/"
 
 import { withLinks } from "../utils/LinkHelpers"
 import SlateToolbar, { toggleMark } from "./SlateToolbar"
+import SEO from "./SEO"
+
 import {
   serialize,
   to_markdown,
@@ -36,9 +38,11 @@ const _initialValue = [
 
 export default function CoolEditor({ pageData, onSave }) {
   const [linkState, setOpenLink] = useState([false, ""])
+
   const initialValue = pageData.body ? html_to_slate(pageData) : _initialValue
   console.log("#initial ", initialValue)
   const [value, setValue] = useState(initialValue)
+  const [localFrontmatter, setFrontmatter] = useState(pageData.frontmatter)
   const renderElement = useCallback(
     props => <Element {...props} setOpenLink={setOpenLink} />,
     []
@@ -53,12 +57,15 @@ export default function CoolEditor({ pageData, onSave }) {
     []
   )
 
-  const documentRef = useRef(value)
-  documentRef.current = value
+  // Important: store DOM and local fm in ref so that
+  // auto-save timer can get current vals
+  const documentRef = useRef({document: value, localFrontmatter})
+  documentRef.current = {document: value, localFrontmatter}
+
 
   useEffect(() => {
     const timer = setInterval(() => {
-      //Node.string(editor) !== "" && onPresave(documentRef.current)
+      onPresave(documentRef.current);
     }, 45000)
     // not really working
     !ReactEditor.isFocused() && ReactEditor.focus(editor)
@@ -66,11 +73,11 @@ export default function CoolEditor({ pageData, onSave }) {
     return () => clearInterval(timer)
   }, [linkState])
 
-  const onPresave = document => {
-    const { title, body } = serialize({ children: document ? document : value })
+  const onPresave = ({document, localFrontmatter: _fm }) => {
+    const { title, body } = serialize({ children: document })
     const frontmatter = {
+      ..._fm,
       title: title || "Untitled",
-      slug: gen_slug_from(title || pageData.frontmatter.title),
       date: new Date().toISOString(),
     }
 
@@ -88,7 +95,14 @@ export default function CoolEditor({ pageData, onSave }) {
     <Slate editor={editor} value={value} onChange={value => setValue(value)}>
       <SlateToolbar linkState={linkState} setOpenLink={setOpenLink} />
       <button onClick={() => onPresave()}>Save draft</button>
-      <Container maxWidth="md" style={{marginTop: "0px"}}>
+      <Container maxWidth="md" style={{ paddingTop: "60px" }}>
+        <SEO
+          frontmatter={localFrontmatter}
+          onUpdate={val => {
+            console.log("#seo ", val)
+            setFrontmatter(val)
+          }}
+        />
         <Editable
           renderElement={renderElement}
           renderLeaf={renderLeaf}
@@ -142,7 +156,11 @@ const Element = ({ attributes, children, element, setOpenLink }) => {
     case "eof":
       return <span>¶</span>
     default:
-      return <p {...attributes} className="main-editor-text">{children}</p>
+      return (
+        <p {...attributes} className="main-editor-text">
+          {children}
+        </p>
+      )
   }
 }
 

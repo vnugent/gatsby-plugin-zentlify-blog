@@ -5,7 +5,7 @@ import { navigate } from "@reach/router"
 
 import { GitClient } from "@tinacms/git-client"
 import CoolEditor from "../components/CoolEditor"
-import { new_draft } from "../components/slate-utils"
+import { new_draft, gen_slug_from } from "../components/slate-utils"
 
 export default ({ raw, onFinish, location, ...rest }) => {
   const slug = get_slug(location)
@@ -20,13 +20,14 @@ export default ({ raw, onFinish, location, ...rest }) => {
       try {
         setLoading(true)
         const result = await fetch(`/page-data/${slug}/page-data.json`)
-        console.log("#fetching data", result)
         if (result.ok) {
           const json = await result.json()
           const {
             frontmatter,
             rawMarkdownBody,
           } = json.result.data.markdownRemark
+          // we already have a slug - this call simply strips off leading and trailing slash
+          frontmatter.slug = gen_slug_from(json.result.pageContext.slug);
           setData({ frontmatter, body: rawMarkdownBody })
         } else {
           setError(true)
@@ -43,11 +44,6 @@ export default ({ raw, onFinish, location, ...rest }) => {
   }, [])
 
   const onSave = async ({ frontmatter, body, whole_document }) => {
-    // const slug = title
-    //   ? slugify(title)
-    //   : `${catNames.random()}-${catNames.random()}-${Math.random()
-    //       .toString(36)
-    //       .substr(2, 5)}`
 
     const slug_has_changed = slug !== frontmatter.slug || false
 
