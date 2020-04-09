@@ -94,8 +94,7 @@ export default function CoolEditor({ pageData, onSave }) {
   return (
     <Slate editor={editor} value={value} onChange={value => setValue(value)}>
       <SlateToolbar linkState={linkState} setOpenLink={setOpenLink} />
-      <button onClick={() => onPresave()}>Save draft</button>
-      <Container maxWidth="md" style={{ paddingTop: "60px" }}>
+      <Container maxWidth="md" style={{ paddingTop: "120px" }}>
         <SEO
           frontmatter={localFrontmatter}
           onUpdate={val => {

@@ -1,36 +1,57 @@
 import React, { useState } from "react"
 import { Link, graphql } from "gatsby"
+import { Container, Box, Button } from "@material-ui/core"
 
-import Editor from "./Editor"
+import Editor from "./editor"
+import BearAppBar, { SlimToolbar } from "../components/widgets/BearAppBar"
+import MainMenu from "../components/MainMenu"
+import { Post } from "../components/Dashboard"
 
-export default ({ data }) => {
+export default function Admin({ data }) {
   console.log("#Admin ", data)
   const [content, setEditableContent] = useState()
   return (
-    <div>
-      {content && (
-        <Editor raw={content} onFinish={() => setEditableContent(undefined)} />
-      )}
-      <header >Admin</header>
-      <Link to="/Editor"><strong>Write new post</strong></Link>
-      <ul>
-        {data &&
-          data.allMarkdownRemark.edges.map(post => (
-            <li key={post.node.fields.slug}>
-              {/* <div
-                onClick={() => setEditableContent(post.node.fields.slug)}
-              >
-                {post.node.frontmatter.title}
-              </div> */}
-              <Link to={`/Editor?p=${remove_flashes(post.node.fields.slug)}`}>
-              {/* <Link to={`/foo/${remove_flashes(post.node.fields.slug)}`}> */}
-                {post.node.frontmatter.title}
-              </Link>
-            </li>
-          ))}
-      </ul>
-    </div>
+    <>
+      <BearAppBar rightMenu={<MainMenu />}>
+        <SlimToolbar>
+          <Box display="flex" fontWeight="600">Dashboard</Box>
+        </SlimToolbar>
+      </BearAppBar>
+      <Container maxWidth="md" style={{ paddingTop: "120px" }}>
+        <Box display="flex" justifyContent="flex-end">
+          <Button
+            color="primary"
+            variant="outlined"
+            // startIcon={<Create />}
+            aria-label="write new"
+            component={Link}
+            to="/editor"
+          >
+            Write new post
+          </Button>
+        </Box>
+        {content && (
+          <Editor
+            raw={content}
+            onFinish={() => setEditableContent(undefined)}
+          />
+        )}
+        {data && <AllPosts list={data.allMarkdownRemark.edges} />}
+      </Container>
+    </>
   )
+}
+
+const AllPosts = ({ list }) => {
+  return list && list.map(post => <ShowPost key={post.node.fields.slug}  post={post} />)
+}
+
+const ShowPost = ({ post }) => {
+  const slug = remove_flashes(post.node.fields.slug)
+  const {frontmatter} = post.node;
+  const {title, description} = frontmatter;
+  const preview = "foo bar"
+  return <Post title={title} slug={slug} excerpt={description ? description: post.node.excerpt} />
 }
 
 export const query = graphql`
@@ -44,8 +65,11 @@ export const query = graphql`
           fields {
             slug
           }
+          excerpt(format: PLAIN)
           frontmatter {
             title
+            description
+            date
           }
         }
       }
@@ -53,5 +77,4 @@ export const query = graphql`
   }
 `
 
-const remove_flashes = (slug) => slug.replace(/^\/|\/$/g, '');
-
+const remove_flashes = slug => slug.replace(/^\/|\/$/g, "")

@@ -18,7 +18,7 @@ const theme = createMuiTheme({
   typography: {
     button: {
       textTransform: "none",
-      fontSize: "1.2em",
+      fontSize: "1.125em",
     },
   },
   palette: {
@@ -32,7 +32,7 @@ const theme = createMuiTheme({
       main: colors.red.A400,
     },
     background: {
-      default: `#fafafa`,
+      default: `rgba(253, 254, 254 , 0.95)`,
     },
   },
   breakpoints: { values: breakpointValues },

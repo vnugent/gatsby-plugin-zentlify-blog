@@ -27,8 +27,4 @@ exports.onCreateDevServer = ({ app }, options) => {
 
   app.use("/___tina", gitApi.router(repo, routerOptions))
 
-  app.get('/hello', function (req, res) {
-    res.send('hello world')
-  })
-
 }

@@ -4,10 +4,16 @@ html {
 body {
     text-rendering: optimizelegibility;
     color:rgba(0, 0, 0, 0.84);
+    background-color: rgba(253, 254, 254 , 1)
+
 }
 
 h1 {
     margin-top: 3rem;
+    font-weight: 600;
+    font-size: 3rem;
+    font-family: Georgia, Cambria, serif;
+    letter-spacing: -0.05rem;
 }
 
 h2 {

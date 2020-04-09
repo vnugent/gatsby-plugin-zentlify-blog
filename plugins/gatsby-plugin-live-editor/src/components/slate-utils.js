@@ -153,9 +153,9 @@ export const gen_slug_from = (str, limit = 15) => {
 }
 
 export const random_slug = () => {
-  return `new-${catNames.random()}-${catNames.random()}-${Math.random()
+  return slugify(`new-draft-${catNames.random()}-${catNames.random()}-${Math.random()
     .toString(36)
-    .substr(2, 5)}`
+    .substr(2, 5)}`, { lower: true, strict: true })
 }
 /**
  * Slate auto-normalize document to enforce structure

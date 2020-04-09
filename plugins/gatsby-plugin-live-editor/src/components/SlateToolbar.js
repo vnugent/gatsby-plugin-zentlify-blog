@@ -1,25 +1,8 @@
 import React, { useCallback, useMemo, useState, useEffect } from "react"
-import isHotkey from "is-hotkey"
-import {
-  Editable,
-  withReact,
-  useSlate,
-  Slate,
-  useEditor,
-  ReactEditor,
-} from "slate-react"
-import { Editor, Transforms, Node } from "slate"
+import { useSlate } from "slate-react"
+import { Editor, Transforms } from "slate"
 
-import {
-  Grid,
-  AppBar,
-  Toolbar,
-  Container,
-  Divider,
-  Paper,
-  Hidden,
-  Button,
-} from "@material-ui/core"
+import { Divider, Button } from "@material-ui/core"
 import { makeStyles, withStyles } from "@material-ui/core/styles"
 
 import { ToggleButton, ToggleButtonGroup } from "@material-ui/lab"
@@ -31,12 +14,13 @@ import {
   FormatListNumbered,
   FormatListBulleted,
   FormatQuote,
-  DnsOutlined,
 } from "@material-ui/icons"
 
 import { insertLink, isLinkActive, move_cursor } from "../utils/LinkHelpers"
 import LinkEditorPopup from "./LinkEditorPopup"
 import LinkAddPopup from "./LinkAddPopup"
+import MainMenu from "./MainMenu"
+import BearAppBar, { SlimToolbar } from "../components/widgets/BearAppBar"
 
 export default function SlateToolbar({ linkState, setOpenLink }) {
   const editor = useSlate()
@@ -44,28 +28,35 @@ export default function SlateToolbar({ linkState, setOpenLink }) {
   const classes = useStyles()
 
   return (
-    <FloatAppBar>
-      <SlimToolbar>
-        <StyledToggleButtonGroup size="small">
-          <MarkButton2 format="strong" icon={<FormatBoldRounded />} />
-          <MarkButton2 format="italic" icon={<FormatItalic />} />
-          <BlockButton editor={editor} format="subheader" icon="Header" />
-          <BlockButton
-            editor={editor}
-            format="block-quote"
-            icon={<FormatQuote />}
-          />
-        </StyledToggleButtonGroup>
-        <Divider orientation="vertical" className={classes.divider} />
-        <StyledToggleButtonGroup size="small">
-          <MarkButton2 format="numbered-list" icon={<FormatListNumbered />} />
-          <MarkButton2 format="bulleted-list" icon={<FormatListBulleted />} />
-        </StyledToggleButtonGroup>
-        <Divider orientation="vertical" className={classes.divider} />
-        <StyledToggleButtonGroup size="small">
-          <LinkButton editor={editor} setAddLinkPopup={setAddLinkPopup} />
-        </StyledToggleButtonGroup>
-      </SlimToolbar>
+    <div>
+      <BearAppBar rightMenu={<MainMenu />}>
+        <SlimToolbar>
+          <StyledToggleButtonGroup size="small">
+            <MarkButton2 format="strong" icon={<FormatBoldRounded />} />
+            <MarkButton2 format="italic" icon={<FormatItalic />} />
+            <BlockButton editor={editor} format="subheader" icon="Header" />
+            <BlockButton
+              editor={editor}
+              format="block-quote"
+              icon={<FormatQuote />}
+            />
+          </StyledToggleButtonGroup>
+          <Divider orientation="vertical" className={classes.divider} />
+          <StyledToggleButtonGroup size="small">
+            <MarkButton2 format="numbered-list" icon={<FormatListNumbered />} />
+            <MarkButton2 format="bulleted-list" icon={<FormatListBulleted />} />
+          </StyledToggleButtonGroup>
+          <Divider orientation="vertical" className={classes.divider} />
+          <StyledToggleButtonGroup size="small">
+            <LinkButton editor={editor} setAddLinkPopup={setAddLinkPopup} />
+          </StyledToggleButtonGroup>
+        </SlimToolbar>
+        <SlimToolbar>
+          <Button size="small" color="secondary" variant="contained">
+            Publish
+          </Button>
+        </SlimToolbar>
+      </BearAppBar>
       <LinkAddPopup
         open={addLinkPopup[0]}
         path={addLinkPopup[1]}
@@ -87,12 +78,7 @@ export default function SlateToolbar({ linkState, setOpenLink }) {
           setOpenLink(e)
         }}
       />
-      <SlimToolbar>
-        <Button size="small" color="secondary" variant="contained">
-          Publish
-        </Button>
-      </SlimToolbar>
-    </FloatAppBar>
+    </div>
   )
 }
 
@@ -198,70 +184,6 @@ const MarkButton2 = ({ format, icon, text }) => {
     </StyledToggleButton>
   )
 }
-
-// const MarkButton = ({ format, icon }) => {
-//   const editor = useSlate()
-//   return (
-//     <Button
-//       active={isMarkActive(editor, format)}
-//       onMouseDown={event => {
-//         event.preventDefault()
-//         toggleMark(editor, format)
-//       }}
-//     >
-//       <Icon>{icon}</Icon>
-//     </Button>
-//   )
-// }
-
-const CoolAppBar = withStyles(theme => ({
-  root: {
-    backgroundColor: "#fafafa",
-    //boxShadow: "none",
-  },
-}))(AppBar)
-
-const SlimToolbar = withStyles(theme => ({
-  root: {
-    margin: 0,
-    paddingLeft: 0,
-    paddingRight: 0,
-  },
-}))(Toolbar)
-
-const FloatAppBar = ({ children }) => (
-  <CoolAppBar>
-    <Container maxWidth="lg">
-      <Grid container alignItems="center" justify="space-between">
-        <Hidden mdDown>
-          <Grid item md={1}>
-            {/* Branding here */}
-          </Grid>
-        </Hidden>
-        <Grid item sm={12} md={10}>
-          <Container
-            maxWidth="md"
-            style={{
-              padding: 0,
-              display: "flex",
-              flexGrow: 1,
-              justifyContent: "space-between",
-            }}
-          >
-            {children}
-          </Container>
-        </Grid>
-        <Grid item md={1}>
-          <Hidden mdDown>
-            <Button>
-              <DnsOutlined />
-            </Button>
-          </Hidden>
-        </Grid>
-      </Grid>
-    </Container>
-  </CoolAppBar>
-)
 
 const StyledToggleButton = withStyles(theme => ({
   root: {

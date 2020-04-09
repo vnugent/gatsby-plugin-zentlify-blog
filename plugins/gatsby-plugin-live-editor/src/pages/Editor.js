@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from "react"
-import { Link } from "gatsby"
 
 import { navigate } from "@reach/router"
 
@@ -7,7 +6,10 @@ import { GitClient } from "@tinacms/git-client"
 import CoolEditor from "../components/CoolEditor"
 import { new_draft, gen_slug_from } from "../components/slate-utils"
 
-export default ({ raw, onFinish, location, ...rest }) => {
+const gitClient = new GitClient("http://localhost:8000/___tina")
+
+
+export default function Editor({ raw, onFinish, location, ...rest }){
   const slug = get_slug(location)
   slug && console.log("Trying to load ", slug)
 
@@ -46,14 +48,10 @@ export default ({ raw, onFinish, location, ...rest }) => {
   const onSave = async ({ frontmatter, body, whole_document }) => {
 
     const slug_has_changed = slug !== frontmatter.slug || false
-
-    console.log("# on Save  ", slug, frontmatter, body)
     if (slug && slug_has_changed) {
       console.log("existing slug renamed - delete old one")
       await gitClient.deleteFromDisk({
         relPath: `${slug}/index.md`,
-        //fileRelativePath: `${frontmatter.slug}/index.md`,
-        // content: content,
       })
     }
 
@@ -65,7 +63,7 @@ export default ({ raw, onFinish, location, ...rest }) => {
       })
       if (slug_has_changed) {
         console.log("Slug changed - reloading page")
-        navigate(`./Editor?p=${frontmatter.slug}`)
+        navigate(`./editor?p=${frontmatter.slug}`, {replace: true})
       } else {
         console.log("Slug not changed - updating current doc")
 
@@ -74,12 +72,6 @@ export default ({ raw, onFinish, location, ...rest }) => {
     } catch (error) {}
   }
 
-  const gitClient = new GitClient("http://localhost:8000/___tina")
-
-  // gitClient.writeToDisk({
-  //   fileRelativePath: "/draft/index1.md",
-  //   content: "hello ;)",
-  // })
 
   return (
     <div>
