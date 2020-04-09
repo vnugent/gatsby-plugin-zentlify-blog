@@ -1,0 +1,33 @@
+html {
+    font-size: 16px;
+}
+body {
+    text-rendering: optimizelegibility;
+    color:rgba(0, 0, 0, 0.84);
+    background-color: rgba(253, 254, 254 , 1)
+
+}
+
+h1 {
+    margin-top: 3rem;
+    font-weight: 600;
+    font-size: 3rem;
+    font-family: Georgia, Cambria, serif;
+    letter-spacing: -0.05rem;
+}
+
+h2 {
+    margin-top: 5rem;
+    font-weight: 600;
+    font-family:"Lucida Grande", "Lucida Sans Unicode", "Lucida Sans", Geneva, Arial, sans-serif;
+    /* line-height: 1.4rem; */
+    letter-spacing: -0.05rem;
+}
+ol, ul {
+    margin-left: 2rem;
+}
+li, p {
+    font-size: 1.40rem;
+    font-family: Georgia, Cambria, serif;
+    line-height: 2.45rem;
+}

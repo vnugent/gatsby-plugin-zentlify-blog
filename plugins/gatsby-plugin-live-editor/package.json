@@ -1,0 +1,32 @@
+{
+  "name": "gatsby-plugin-live-editor",
+  "version": "1.0.0",
+  "main": "index.js",
+  "author": "Nacho",
+  "license": "MIT",
+  "dependencies": {
+    "@material-ui/lab": "^4.0.0-alpha.48",
+    "@material-ui/styles": "^4.9.6",
+    "@mdx-js/react": "^1.5.8",
+    "@tinacms/api-git": "^0.7.0",
+    "@tinacms/git-client": "^0.6.4",
+    "cat-names": "^3.0.0",
+    "emotion": "^10.0.27",
+    "escape-html": "^1.0.3",
+    "gatsby-plugin-create-client-paths": "^2.2.1",
+    "gatsby-plugin-exclude": "^1.0.2",
+    "gatsby-plugin-material-ui": "^2.1.6",
+    "gatsby-plugin-mdx": "^1.1.4",
+    "gatsby-plugin-web-font-loader": "^1.0.4",
+    "is-hotkey": "^0.1.6",
+    "is-url": "^1.2.4",
+    "material-icons": "^0.3.1",
+    "node-html-parser": "^1.2.14",
+    "slate": "0.57.1",
+    "slate-history": "0.57.1",
+    "slate-hyperscript": "^0.57.1",
+    "slate-react": "0.57.1",
+    "slugify": "^1.4.0"
+  },
+  "devDependencies": {}
+}
