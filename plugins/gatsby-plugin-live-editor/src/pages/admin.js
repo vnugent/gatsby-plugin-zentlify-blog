@@ -8,7 +8,6 @@ import MainMenu from "../components/MainMenu"
 import { Post } from "../components/Dashboard"
 
 export default function Admin({ data }) {
-  console.log("#Admin ", data)
   const [content, setEditableContent] = useState()
   return (
     <>
