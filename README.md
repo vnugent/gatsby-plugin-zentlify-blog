@@ -1,3 +1,7 @@
+This project has moved to https://github.com/tacogator/gatsby-themes
+
+---
+
 ## Zenlify: Git-based microblog plugin for Gatsby.
 
 Zenlify turns your Gatsby git repo into a complete blogging platform.  Edit markdown contents with the built-in distraction-free editor.
